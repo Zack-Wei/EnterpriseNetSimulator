@@ -1,0 +1,15 @@
+
+sw-enterprise-public: sw-enterprise-distribution-1
+sw-enterprise-department1: sw-enterprise-distribution-1
+sw-enterprise-department2: sw-enterprise-distribution-1
+
+server-dhcp-1: sw-enterprise-public
+server-antimalware: sw-enterprise-public
+
+sw-enterprise-department1: server-dhcp-1
+sw-enterprise-department2: server-dhcp-1
+
+staff-machine-1: sw-enterprise-department1
+staff-machine-2: sw-enterprise-department1
+staff-machine-3: sw-enterprise-department2
+staff-machine-4: sw-enterprise-department2

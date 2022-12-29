@@ -1,0 +1,13 @@
+###############################
+#
+# gw-management-1.startup
+#
+###############################
+
+ip addr add 192.168.254.1/24 dev eth2
+ip link set up dev eth2
+
+ip addr add 10.0.0.26/30 dev eth30
+ip link set up dev eth30
+
+ip route add default via 10.0.0.25

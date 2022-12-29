@@ -1,0 +1,38 @@
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;Shortcuts and the zone name
+;   The zone name defined by the reference to this file from named.conf.local 
+;     is really important. In this case it is 'cyber.test'
+;   * Where there is no trailing '.' (eg 'm1' NOT 'm1.') then the zone name 
+;     is appended to the name so 'm1' becomes 'm1.cyber.test'
+;   * The '@' symbol represents the the zone name
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+$TTL	8h
+@	IN	SOA     intdns.fido22.cyber.test.    root.fido22.cyber.test. (
+		2022080101 ; serial
+		8h         ; refresh
+		2h         ; retry
+		1w         ; expire
+		0          ; negative cache ttl
+		)
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; nameserver(s)
+@	IN	NS	intdns.fido22.cyber.test.
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; services
+intdns	IN	A	192.168.104.2
+intwww	IN	A	192.168.104.3
+ldap	IN	A	192.168.104.4
+
+squidproxy		IN	A	192.168.101.2
+mail		IN	A	192.168.101.3
+
+3rdinterface1		IN	A	192.168.103.2
+
+redis		IN	A	192.168.105.2
+mysql		IN	A	192.168.105.3
+
+graylog		IN	A	192.168.254.2
+prometheus		IN	A	192.168.254.2
+
+vpn		IN	A	172.16.0.2

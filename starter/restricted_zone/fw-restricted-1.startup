@@ -1,0 +1,36 @@
+#This firewall aims to control restricted zone's in/out trafic
+#
+
+
+# eth30 to the core SW
+ip addr add 192.168.1.51/24 dev eth30
+ip link set up dev eth30
+
+# eth2 to the dmz gw
+ip addr add 10.0.0.21/30 dev eth2
+ip link set up dev eth2
+
+ip route add default via 192.168.1.1
+ip route add 192.168.105.0/24 via 10.0.0.22
+
+# outgress iptables rules
+## ban access to vpn
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 172.16.0.0/21 -j DROP
+
+# ingress iptables rules
+## allow core sw
+iptables -A INPUT -p all -s 192.168.1.0/24 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.1.0/24 -j ACCEPT
+## allow management zone
+iptables -A INPUT -p all -s 192.168.254.0/24 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.254.0/24 -j ACCEPT
+
+## services ports: 3306,6379
+## allow Intranet zone
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.104.0/24 -d 192.168.105.2 --dport 6379 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.104.0/24 -d 192.168.105.3 --dport 3306 -j ACCEPT
+
+## At last, deny all
+iptables -A FORWARD -i eth30 -o eth2 -p all --match conntrack --ctstate NEW -j REJECT
+iptables -A INPUT -p all --match conntrack --ctstate NEW -j REJECT
+

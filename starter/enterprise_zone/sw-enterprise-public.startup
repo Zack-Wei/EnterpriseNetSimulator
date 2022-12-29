@@ -1,0 +1,63 @@
+###########################################
+#
+# sw-enterprise-public.startup switch configuration
+#
+###########################################
+
+# look in lab.conf to find out which network cards it has
+
+######## 1) configure the nics ###########
+
+# first 40 bits of 48bit mac address is common to all NICs and the switch itself
+mac_base="02:a9:a9:a9:a9"
+
+# for each of the host facing NICs in turn 
+for i in 1 2 3 4 5 6
+do
+  # assign unique mac address to each nic and and put all nics in a common group
+  last_octet="$(printf %02x $i)"
+  ip link set dev eth${i} \
+    address ${mac_base}:${last_octet} \
+    group 40
+done
+
+# for each of the switch facing NICs in turn 
+for i in 30
+do
+  # assign unique mac address to each nic and and put all nics in a common group
+  last_octet="$(printf %02x $i)"
+  ip link set dev eth${i} \
+    address ${mac_base}:${last_octet} \
+    group 10
+done
+
+######## 2) configure the switch ###########
+
+# create the switch aka bridge (note end-of-line continuation slashes)
+# we will call it "sw0" - most examples will use br0
+# we will configure the switch:
+#   to enable spanning tree protocolto manage loops
+#   to set spanning tree priority to be fairly low (big number = low priority)
+#   to disable vlans 
+ip link add sw0 type bridge \
+   stp_state 1 \
+   priority 9000 \
+   vlan_filtering 1
+
+# give it a unique MAC address, diff from the nics
+ip link set dev sw0 address ${mac_base}:00
+
+# make all of the host facing network cards part of the switch using the groups
+ip link set group 10 \
+  master sw0 \
+  promisc on \
+  up
+  
+# make all of the switch facing network cards part of the switch using the groups
+ip link set group 40 \
+  master sw0 \
+  promisc on \
+  up
+
+# lastly, bring the bridge up
+ip link set dev sw0 up

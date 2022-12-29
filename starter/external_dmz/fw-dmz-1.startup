@@ -1,0 +1,45 @@
+#This firewall aims to control dmz zone's in/out trafic
+#
+
+
+# eth30 to the core SW
+ip addr add 192.168.1.11/24 dev eth30
+ip link set up dev eth30
+
+# eth2 to the dmz gw
+ip addr add 10.0.0.5/30 dev eth2
+ip link set up dev eth2
+
+ip route add default via 192.168.1.1
+ip route add 192.168.101.0/24 via 10.0.0.6
+
+# outgress iptables rules
+## ban access to vpn
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 172.16.0.0/21 --match conntrack --ctstate NEW -j DROP
+
+# ingress iptables rules
+
+## allow core sw access all
+iptables -A INPUT -p all -s 192.168.1.0/24 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.1.0/24 -j ACCEPT
+## allow management zone access all
+iptables -A INPUT -p all -s 192.168.254.0/24 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.254.0/24 -j ACCEPT
+
+## services ports:
+## allow fw-internet access services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/30 -d 192.168.101.2 -m multiport --dports 8080 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/30 -d 192.168.101.3 -m multiport --dports 443 -j ACCEPT
+## allow Enterprise zone access services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.102.0/24 -d 192.168.101.2 -m multiport --dports 3128,3129,8080 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.102.0/24 -d 192.168.101.3 -m multiport --dports 25,443 -j ACCEPT
+## allow vpn access services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.101.2 -m multiport --dports 3128,3129,8080 -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.101.3 -m multiport --dports 25,443 -j ACCEPT
+
+## At last, deny all but allow the internet access the dmz hosts
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.0.0/16 --match conntrack --ctstate NEW -j REJECT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 172.16.0.0/12 --match conntrack --ctstate NEW -j REJECT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 10.0.0.0/8 --match conntrack --ctstate NEW -j REJECT
+iptables -A INPUT -p all --match conntrack --ctstate NEW -j REJECT
+

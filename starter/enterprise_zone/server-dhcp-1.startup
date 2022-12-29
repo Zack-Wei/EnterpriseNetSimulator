@@ -1,0 +1,21 @@
+
+###############################
+#
+# server-dhcp-1.startup
+#
+###############################
+
+# bring up eth0 according to settings in /etc/network/interfaces
+# ip address 192.168.102.254/24
+ifup eth0
+
+ip route add default via 192.168.102.1
+
+
+# ~~~~~ D H C P ~~~~~~~
+# look in /etc/dnsmasq.d/*
+# Note that by setting the port to 0, then DNS is disabled.
+
+systemctl start dnsmasq.service
+
+

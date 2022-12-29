@@ -1,0 +1,11 @@
+ip addr add 192.168.101.2/24 dev eth0
+ip link set up dev eth0
+
+ip route add default via 192.168.101.1
+
+
+# start tcp chat service
+# look in /usr/lib/systemd/system/ncat-tcp-chat@.service for the unit file
+for port in 8080 3128 3129
+  do systemctl start ncat-tcp-chat@${port}
+done

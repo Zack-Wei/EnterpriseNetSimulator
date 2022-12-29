@@ -1,0 +1,15 @@
+###############################
+#
+# gw-extranet-1.startup
+#
+###############################
+
+ip link set dev eth2 address 02:55:55:e0:e0:e0
+ip addr add 192.168.103.1/24 dev eth2
+ip link set up dev eth2
+
+ip link set dev eth30 address 02:55:55:e1:e1:e1
+ip addr add 10.0.0.14/30 dev eth30
+ip link set up dev eth30
+
+ip route add default via 10.0.0.13

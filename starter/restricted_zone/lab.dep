@@ -1,0 +1,2 @@
+server-mysql-1: sw-restricted-1
+server-redis-1: sw-restricted-1

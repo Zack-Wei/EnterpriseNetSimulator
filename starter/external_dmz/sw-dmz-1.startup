@@ -1,0 +1,71 @@
+#This L2 switch aims to connect every hosts in the dmz
+#
+
+###########################################
+#
+# sw-dmz-1.startup 
+#
+# second access layer switch configuration
+#
+###########################################
+
+# look in lab.conf to find out which network cards it has
+
+######## 1) configure the nics ###########
+# set each nic on the switch with a distinct MAC address
+# we will make it look like it was made by 3com Europe :-)
+
+# first asign MAC address to the nics intended for connection to hosts
+ip link set dev eth1 address 08:00:4e:a1:a1:01
+ip link set dev eth2 address 08:00:4e:a1:a1:02
+ip link set dev eth3 address 08:00:4e:a1:a1:03
+ip link set dev eth4 address 08:00:4e:a1:a1:04
+ip link set dev eth5 address 08:00:4e:a1:a1:05
+ip link set dev eth6 address 08:00:4e:a1:a1:06
+
+# put each of these nics in a (arbitrary) group to simplify subsequent admin
+ip link set dev eth1 group 41
+ip link set dev eth2 group 41
+ip link set dev eth3 group 41
+ip link set dev eth4 group 41
+ip link set dev eth5 group 41
+ip link set dev eth6 group 41
+
+# do similar for the nics intended for connection to other switches
+ip link set dev eth30 address 08:00:4e:a1:a1:fe
+ip link set dev eth31 address 08:00:4e:a1:a1:ff
+
+# put these nics in a diff arbitrary group, again to simplify admin
+ip link set dev eth30 group 11
+ip link set dev eth31 group 11
+
+######## 2) configure the switch ###########
+
+# create the switch aka bridge (note end-of-line continuation slashes)
+# we will call it "sw0" - most examples will use br0
+# we will configure the switch:
+#   to enable spanning tree protocol (stp) to prevent accidental broadcast storms
+#   to set spanning tree priority to be fairly low (big number = low priority)
+#   to disable vlans 
+ip link add sw0 type bridge \
+   stp_state 1 \
+   priority 9001 \
+   vlan_filtering 0
+
+# give it a unique MAC address
+ip link set dev sw0 address 08:00:4e:a1:a1:00
+
+# make all of the network cards part of the switch using the groups
+ip link set group 11 master sw0
+ip link set group 11 up
+ip link set group 11 promisc on
+
+ip link set group 41 master sw0
+ip link set group 41 up
+ip link set group 41 promisc on
+
+# lastly, bring the bridge up
+ip link set dev sw0 up
+
+
+

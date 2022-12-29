@@ -1,0 +1,78 @@
+///////////////
+//
+// dns1 named.conf.options
+//
+// default debian named.conf includes this file first
+//
+///////////////
+
+acl dmz-addresses {
+	192.168.101.0/24; 
+};
+
+acl enterprise-addresses {
+	192.168.102.0/24; 
+};
+
+acl extranet-addresses {
+	192.168.103.0/24; 
+};
+
+acl intranet-addresses {
+	192.168.104.0/24; 
+};
+
+acl restricted-addresses {
+	192.168.105.0/24; 
+};
+
+acl management-addresses {
+	192.168.254.0/24; 
+};
+
+acl vpn-addresses {
+	172.16.0.0/21; 
+};
+
+
+acl all-internal-addresses {
+	dmz-addresses;
+	enterprise-addresses;
+	extranet-addresses;
+	intranet-addresses;
+	restricted-addresses;
+	management-addresses;
+	vpn-addresses;
+};
+
+
+// these are server-wide configuration options
+options {
+	// all relative paths have this as the origin
+	directory "/var/cache/bind";
+	
+	// increase work effort to exploit vulnerability of specific version
+	version "Version not available.";
+
+	// we will build the answer to the dns query by asking other servers
+	// however, we will not verify the crypto signatures on the answers from other servers
+	recursion yes;
+	dnssec-validation no;
+	
+	// we will only answer queries from specific internal address ranges
+	// see acl clauses above
+	allow-query {
+				dmz-addresses;
+				enterprise-addresses;
+				extranet-addresses;
+				intranet-addresses;
+				restricted-addresses;
+				management-addresses;
+				vpn-addresses;
+	};
+	
+	// log all queries so we can see who is asking what and when
+	querylog yes;
+};
+
+

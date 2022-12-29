@@ -1,0 +1,46 @@
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+;Shortcuts and the zone name
+;   The zone name defined by the reference to this file from named.conf.local 
+;     is really important. In this case it is "172.in-addr.arpa"
+;   * Where there is no trailing '.' (eg 1.2.3 NOT 1.2.3.) then the zone name 
+;     is appended to the name so 1.2.3 becomes 1.2.3.172.in-addr.arpa
+;   * The '@' symbol represents the the zone name
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+
+$TTL    8h
+@	IN      SOA     intdns.fido22.cyber.test.    root.fido22.cyber.test. (
+		2022080101 ; serial
+		8h         ; refresh
+		2h         ; retry
+		1w         ; expire
+		0          ; negative cache ttl
+		)
+
+;~~~~~~~~~~~~~~~~~
+; nameserver(s)
+;
+@	IN	NS	intdns.fido22.cyber.test.
+
+;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+; Host pointers to canonical name
+
+; dmz network (192.168.101.0/24)
+2.101.168	IN	PTR	squidproxy.fido22.cyber.test.
+3.101.168	IN	PTR	mail.fido22.cyber.test.
+
+; extranet network (192.168.103.0/24)
+2.103.168	IN	PTR	3rdinterface1.fido22.cyber.test.
+
+; intranet network (192.168.104.0/24)
+2.104.168	IN	PTR	intdns.fido22.cyber.test.
+3.104.168	IN	PTR	intwww.fido22.cyber.test.
+4.104.168	IN	PTR	ldap.fido22.cyber.test.
+
+; restricted network (192.168.105.0/24)
+2.105.168	IN	PTR	redis.fido22.cyber.test.
+3.105.168	IN	PTR	mysql.fido22.cyber.test.
+
+; management network (192.168.254.0/24)
+2.254.168	IN	PTR	graylog.fido22.cyber.test.
+3.254.168	IN	PTR	prometheus.fido22.cyber.test.
+
