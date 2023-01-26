@@ -8,4 +8,4 @@ iface lo inet loopback
 # make eth0 use dhcp
 auto eth0
 iface eth0 inet dhcp
-
+	hwaddress ether 02:01:01:01:01:04

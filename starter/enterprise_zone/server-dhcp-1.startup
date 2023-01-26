@@ -6,10 +6,10 @@
 ###############################
 
 # bring up eth0 according to settings in /etc/network/interfaces
-# ip address 192.168.102.254/24
 ifup eth0
 
-ip route add default via 192.168.102.1
+# ip address 192.168.12.254/24
+#ip route add default via 192.168.12.1
 
 
 # ~~~~~ D H C P ~~~~~~~

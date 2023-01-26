@@ -7,27 +7,27 @@
 ///////////////
 
 acl dmz-addresses {
-	192.168.101.0/24; 
+	192.168.11.0/28; 
 };
 
 acl enterprise-addresses {
-	192.168.102.0/24; 
+	192.168.12.0/24; 
 };
 
 acl extranet-addresses {
-	192.168.103.0/24; 
+	192.168.13.0/28; 
 };
 
 acl intranet-addresses {
-	192.168.104.0/24; 
+	192.168.14.0/27; 
 };
 
 acl restricted-addresses {
-	192.168.105.0/24; 
+	192.168.15.0/28; 
 };
 
 acl management-addresses {
-	192.168.254.0/24; 
+	192.168.254.0/27; 
 };
 
 acl vpn-addresses {

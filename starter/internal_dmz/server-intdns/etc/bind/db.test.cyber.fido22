@@ -20,17 +20,17 @@ $TTL	8h
 
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; services
-intdns	IN	A	192.168.104.2
-intwww	IN	A	192.168.104.3
-ldap	IN	A	192.168.104.4
+intdns	IN	A	192.168.14.2
+intwww	IN	A	192.168.14.3
+ldap	IN	A	192.168.14.4
 
-squidproxy		IN	A	192.168.101.2
-mail		IN	A	192.168.101.3
+squidproxy		IN	A	192.168.11.2
+mail		IN	A	192.168.11.3
 
-3rdinterface1		IN	A	192.168.103.2
+3rdinterface1		IN	A	192.168.13.2
 
-redis		IN	A	192.168.105.2
-mysql		IN	A	192.168.105.3
+redis		IN	A	192.168.15.2
+mysql		IN	A	192.168.15.3
 
 graylog		IN	A	192.168.254.2
 prometheus		IN	A	192.168.254.2

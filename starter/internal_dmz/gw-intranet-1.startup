@@ -4,10 +4,10 @@
 #
 ###############################
 
-ip addr add 192.168.104.1/24 dev eth2
+ip addr add 192.168.14.1/27 dev eth2
 ip link set up dev eth2
 
-ip addr add 10.0.0.18/30 dev eth30
+ip addr add 192.168.1.4/28 dev eth30
 ip link set up dev eth30
 
-ip route add default via 10.0.0.17
+ip route add default via 192.168.1.1

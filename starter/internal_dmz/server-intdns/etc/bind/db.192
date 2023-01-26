@@ -24,23 +24,23 @@ $TTL    8h
 ;~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 ; Host pointers to canonical name
 
-; dmz network (192.168.101.0/24)
-2.101.168	IN	PTR	squidproxy.fido22.cyber.test.
-3.101.168	IN	PTR	mail.fido22.cyber.test.
+; dmz network (192.168.11.0/28)
+2.11.168	IN	PTR	squidproxy.fido22.cyber.test.
+3.11.168	IN	PTR	mail.fido22.cyber.test.
 
-; extranet network (192.168.103.0/24)
-2.103.168	IN	PTR	3rdinterface1.fido22.cyber.test.
+; extranet network (192.168.13.0/28)
+2.13.168	IN	PTR	3rdinterface1.fido22.cyber.test.
 
-; intranet network (192.168.104.0/24)
-2.104.168	IN	PTR	intdns.fido22.cyber.test.
-3.104.168	IN	PTR	intwww.fido22.cyber.test.
-4.104.168	IN	PTR	ldap.fido22.cyber.test.
+; intranet network (192.168.14.0/28)
+2.14.168	IN	PTR	intdns.fido22.cyber.test.
+3.14.168	IN	PTR	intwww.fido22.cyber.test.
+4.14.168	IN	PTR	ldap.fido22.cyber.test.
 
-; restricted network (192.168.105.0/24)
-2.105.168	IN	PTR	redis.fido22.cyber.test.
-3.105.168	IN	PTR	mysql.fido22.cyber.test.
+; restricted network (192.168.15.0/28)
+2.15.168	IN	PTR	redis.fido22.cyber.test.
+3.15.168	IN	PTR	mysql.fido22.cyber.test.
 
-; management network (192.168.254.0/24)
+; management network (192.168.254.0/27)
 2.254.168	IN	PTR	graylog.fido22.cyber.test.
 3.254.168	IN	PTR	prometheus.fido22.cyber.test.
 

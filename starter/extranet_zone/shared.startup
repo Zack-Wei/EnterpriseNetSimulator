@@ -13,7 +13,7 @@ sysctl -p
 # Configure DNS resolver
 cat << EOF > /etc/resolvconf/resolv.conf.d/base
 search fido22.cyber.test
-nameserver 192.168.104.2
+nameserver 192.168.14.2
 nameserver 8.8.8.8
 EOF
 
