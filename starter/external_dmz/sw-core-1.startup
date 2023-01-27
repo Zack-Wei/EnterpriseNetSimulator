@@ -5,8 +5,8 @@
 ip addr add 10.0.0.2/30 dev eth30
 ip link set up dev eth30
 
-# eth1 to the Zones
-ip addr add 192.168.1.1/24 dev eth1
+# eth1 to fw-core and fw-dmz
+ip addr add 192.168.0.1/29 dev eth1
 ip link set up dev eth1
 
 # eth2 to the vpn
@@ -14,18 +14,19 @@ ip addr add 172.16.0.1/21 dev eth2
 ip link set up dev eth2
 
 ip route add default via 10.0.0.1
+
 # dmz zone route
-ip route add 192.168.101.0/24 via 192.168.1.11 
+ip route add 192.168.11.0/27 via 192.168.0.2
 # enterprise zone route
-ip route add 192.168.102.0/24 via 192.168.1.21 
+ip route add 192.168.12.0/24 via 192.168.0.3
 # extranet zone route
-ip route add 192.168.103.0/24 via 192.168.1.31 
+ip route add 192.168.13.0/28 via 192.168.0.3
 # intranet zone route
-ip route add 192.168.104.0/24 via 192.168.1.41  
+ip route add 192.168.14.0/27 via 192.168.0.3
 # restricted zone route
-ip route add 192.168.105.0/24 via 192.168.1.51  
+ip route add 192.168.15.0/28 via 192.168.0.3
 # management zone route
-ip route add 192.168.254.0/24 via 192.168.1.61  
+ip route add 192.168.254.0/27 via 192.168.0.3
 # vpn route
 ip route add 172.16.0.0/21 via 172.16.0.2  
 

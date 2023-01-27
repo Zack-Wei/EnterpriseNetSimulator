@@ -1,4 +1,4 @@
-#this file aims to start all the hosts in order
+#this file aims to crash all the hosts in order
 
 lcrash -d ./internet_zone
 lcrash -d ./external_dmz

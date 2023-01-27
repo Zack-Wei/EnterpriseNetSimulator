@@ -1,7 +1,6 @@
 #This firewall aims for NAT and filtering the Internet traffic
 #
 
-
 # eth1 to the Internet
 ip addr add 80.64.157.253/16 dev eth1
 ip link set up dev eth1
@@ -20,45 +19,41 @@ ip route add default via 80.64.157.254 dev eth1
 ip route add 192.168.0.0/16 via 10.0.0.2  dev eth2
 ip route add 172.16.0.0/12 via 10.0.0.2  dev eth2
 
-# outgress iptables rules
+########################################################################################################
+# iptables rules
+# default drop
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
+
+# outgress traffic rules
 ## allow dmz zone accessing the Internet
-iptables -A FORWARD -i eth2 -o eth1 -p all -s 192.168.101.0/24 -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth1 -p all -s 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 ## allow VPN accessing the Internet
-iptables -A FORWARD -i eth2 -o eth1 -p all -s 172.16.0.0/21 -j ACCEPT
-## At last, deny other zones accessing the Internet
-iptables -A FORWARD -i eth2 -o eth1 -p all --match conntrack --ctstate NEW -j REJECT
+iptables -A FORWARD -i eth2 -o eth1 -p all -s 172.16.0.0/21 --match conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
 
-## whitelist ---- allow management zone access fllowed IPs 
-iptables -I FORWARD -i eth2 -o eth1 -p all -s 192.168.254.0/24 -d 201.224.30.30 -j ACCEPT
-
-# ingress & fw self accessing rules
-## allow core sw
-iptables -A INPUT -p all -s 192.168.1.0/24 -j ACCEPT
-## allow management zone
-iptables -A INPUT -p all -s 192.168.254.0/24 -j ACCEPT
-## allow the Internet accessing company's public IPs and dmz zone
-iptables -A INPUT -p all -d 80.64.0.0/16 -j ACCEPT
-iptables -A FORWARD -i eth1 -o eth2 -p all -d 192.168.101.0/24 -j ACCEPT
+# ingress traffic rules
+## allow the Internet accessing company's public IPs and dmz zone Services
+iptables -A FORWARD -i eth1 -o eth2 -p all -d 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
 ## allow the Internet accessing OpenVPN service
-iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 172.16.0.2 --dport 1194 -j ACCEPT
-iptables -A INPUT -p tcp -d 172.16.0.2 --dport 1194 -j ACCEPT
-## At last, deny all
-iptables -A INPUT -p all --match conntrack --ctstate NEW -j REJECT
-iptables -A FORWARD -i eth1 -o eth2 -p all --match conntrack --ctstate NEW -j REJECT
+iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 172.16.0.2 --dport 1194 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
 
-## blacklist ---- ban the host evil 
-iptables -I FORWARD -s 201.224.20.20 -j DROP
-iptables -I INPUT -s 201.224.20.20 -j DROP
+# fw self accessing rules
+## allow core sw
+iptables -A INPUT -p all -s 10.0.0.2/32 -j ACCEPT
+## allow management zone
+iptables -A INPUT -p all -s 192.168.254.0/27 -j ACCEPT
 
-# NAT
+########################################################################################################
 # SNAT
 iptables -t nat -A POSTROUTING -o eth1 -j SNAT --to-source 80.64.157.252-80.64.157.253
+
 # DNAT
-## Services
-## squidproxy
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 18080 -j DNAT --to-destination 192.168.101.2:8080
+## www
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 443 -j DNAT --to-destination 192.168.101.3:443
 ## mail
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 20443 -j DNAT --to-destination 192.168.101.3:443
 iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 25 -j DNAT --to-destination 192.168.101.3:25
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 587 -j DNAT --to-destination 192.168.101.3:587
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 993 -j DNAT --to-destination 192.168.101.3:993
 ## VPN
-iptables -t nat -A PREROUTING -d 80.64.157.250 -p tcp --dport 1194 -j DNAT --to-destination 172.16.0.2:1194
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 1194 -j DNAT --to-destination 172.16.0.2:1194

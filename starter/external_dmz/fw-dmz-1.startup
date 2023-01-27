@@ -1,45 +1,54 @@
 #This firewall aims to control dmz zone's in/out trafic
 #
 
-
 # eth30 to the core SW
-ip addr add 192.168.1.11/24 dev eth30
+ip addr add 192.168.0.2/29 dev eth30
 ip link set up dev eth30
 
 # eth2 to the dmz gw
 ip addr add 10.0.0.5/30 dev eth2
 ip link set up dev eth2
 
-ip route add default via 192.168.1.1
-ip route add 192.168.101.0/24 via 10.0.0.6
+ip route add default via 192.168.0.1
+ip route add 192.168.11.0/27 via 10.0.0.6
 
-# outgress iptables rules
-## ban access to vpn
-iptables -A FORWARD -i eth2 -o eth30 -p all -d 172.16.0.0/21 --match conntrack --ctstate NEW -j DROP
+########################################################################################################
+# iptables rules
+# default drop
+iptables -P INPUT DROP
+iptables -P OUTPUT DROP
+iptables -P FORWARD DROP
 
-# ingress iptables rules
+# outgress traffic rules
+## allow dmz zone accessing the extranet
+#iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.13.0/28 -s 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow dmz zone accessing the Internet
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.11.0/27 --match conntrack -s 192.168.11.0/27 --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow reply traffic
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 10.0.0.1/32 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.12.0/24 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 172.16.0.0/21 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.254.0/27 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-## allow core sw access all
-iptables -A INPUT -p all -s 192.168.1.0/24 -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.1.0/24 -j ACCEPT
-## allow management zone access all
-iptables -A INPUT -p all -s 192.168.254.0/24 -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.254.0/24 -j ACCEPT
+# ingress traffic rules
+## allow fw-internet accessing services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/32 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/32 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow Enterprise zone accessing services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.2 -m multiport --dports 3128,3129,8080 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow vpn accessing services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.2 -m multiport --dports 3128,3129,8080 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow management accessing all
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.254.0/27 -j ACCEPT
 
-## services ports:
-## allow fw-internet access services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/30 -d 192.168.101.2 -m multiport --dports 8080 -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/30 -d 192.168.101.3 -m multiport --dports 443 -j ACCEPT
-## allow Enterprise zone access services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.102.0/24 -d 192.168.101.2 -m multiport --dports 3128,3129,8080 -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.102.0/24 -d 192.168.101.3 -m multiport --dports 25,443 -j ACCEPT
-## allow vpn access services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.101.2 -m multiport --dports 3128,3129,8080 -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.101.3 -m multiport --dports 25,443 -j ACCEPT
-
-## At last, deny all but allow the internet access the dmz hosts
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.0.0/16 --match conntrack --ctstate NEW -j REJECT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 172.16.0.0/12 --match conntrack --ctstate NEW -j REJECT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 10.0.0.0/8 --match conntrack --ctstate NEW -j REJECT
-iptables -A INPUT -p all --match conntrack --ctstate NEW -j REJECT
-
+# fw self accessing rules
+## allow core sw
+iptables -A INPUT -p all -s 192.168.0.1/32 -j ACCEPT
+iptables -A OUTPUT -p all -d 192.168.0.1/32 -j ACCEPT
+## allow management zone
+iptables -A INPUT -p all -s 192.168.254.0/27 -j ACCEPT
+iptables -A OUTPUT -p all -d 192.168.254.0/27 --ctstate ESTABLISHED,RELATED -j ACCEPT
