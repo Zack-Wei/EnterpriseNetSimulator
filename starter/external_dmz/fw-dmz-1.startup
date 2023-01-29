@@ -19,32 +19,26 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
+################################
 # outgress traffic rules
-## allow dmz zone accessing the extranet
-#iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.13.0/28 -s 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-## allow dmz zone accessing the Internet
-iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.11.0/27 --match conntrack -s 192.168.11.0/27 --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-## allow reply traffic
-iptables -A FORWARD -i eth2 -o eth30 -p all -d 10.0.0.1/32 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.12.0/24 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth30 -p all -d 172.16.0.0/21 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth30 -p all -d 192.168.254.0/27 -s 192.168.11.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+## allow dmz zone accessing the Internet and Core Zone(the specific allow-rules between dmz and core will be configed in fw-core)
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.11.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -d 192.168.11.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
+################################
 # ingress traffic rules
-## allow fw-internet accessing services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/32 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 10.0.0.1/32 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-## allow Enterprise zone accessing services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.2 -m multiport --dports 3128,3129,8080 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-## allow vpn accessing services
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.2 -m multiport --dports 3128,3129,8080 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.3 -m multiport --dports 25,587,993 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.4 --dport 443 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow accessing public services
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -d 192.168.11.3 -m multiport --dports 25,587,993 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -d 192.168.11.4 --dport 443 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+
+## allow Enterprise zone accessing squidproxy
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 192.168.12.0/24 -d 192.168.11.2 -m multiport --dports 3128,3129 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow vpn accessing squidproxy
+iptables -A FORWARD -i eth30 -o eth2 -p tcp -s 172.16.0.0/21 -d 192.168.11.2 -m multiport --dports 3128,3129 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
 ## allow management accessing all
 iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.254.0/27 -j ACCEPT
 
+################################
 # fw self accessing rules
 ## allow core sw
 iptables -A INPUT -p all -s 192.168.0.1/32 -j ACCEPT

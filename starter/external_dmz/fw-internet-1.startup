@@ -18,6 +18,7 @@ ip link set up dev eth2
 ip route add default via 80.64.157.254 dev eth1
 ip route add 192.168.0.0/16 via 10.0.0.2  dev eth2
 ip route add 172.16.0.0/12 via 10.0.0.2  dev eth2
+ip route add 10.0.0.0/8 via 10.0.0.2  dev eth2
 
 ########################################################################################################
 # iptables rules
@@ -26,23 +27,32 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
+################################
 # outgress traffic rules
 ## allow dmz zone accessing the Internet
-iptables -A FORWARD -i eth2 -o eth1 -p all -s 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth1 -p all -s 192.168.11.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth2 -p all -d 192.168.11.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow VPN accessing the Internet
-iptables -A FORWARD -i eth2 -o eth1 -p all -s 172.16.0.0/21 --match conntrack --ctstate NEW,ESTABLISHED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth1 -p all -s 172.16.0.0/21 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth2 -p all -d 172.16.0.0/21 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
+################################
 # ingress traffic rules
-## allow the Internet accessing company's public IPs and dmz zone Services
-iptables -A FORWARD -i eth1 -o eth2 -p all -d 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-## allow the Internet accessing OpenVPN service
-iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 172.16.0.2 --dport 1194 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+## allow the Internet accessing dmz zone Services
+iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 192.168.11.3 -m multiport --dports 25,587,993 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 192.168.11.4 --dport 443 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
 
+## allow the Internet accessing OpenVPN service
+iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 172.16.0.2 --dport 1194 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+
+################################
 # fw self accessing rules
 ## allow core sw
 iptables -A INPUT -p all -s 10.0.0.2/32 -j ACCEPT
+iptables -A OUTPUT -p all -d 10.0.0.2/32 -j ACCEPT
 ## allow management zone
 iptables -A INPUT -p all -s 192.168.254.0/27 -j ACCEPT
+iptables -A OUTPUT -p all -d 192.168.254.0/27 --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 ########################################################################################################
 # SNAT
@@ -50,10 +60,10 @@ iptables -t nat -A POSTROUTING -o eth1 -j SNAT --to-source 80.64.157.252-80.64.1
 
 # DNAT
 ## www
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 443 -j DNAT --to-destination 192.168.101.3:443
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 443 -j DNAT --to-destination 192.168.11.4:443
 ## mail
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 25 -j DNAT --to-destination 192.168.101.3:25
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 587 -j DNAT --to-destination 192.168.101.3:587
-iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 993 -j DNAT --to-destination 192.168.101.3:993
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 25 -j DNAT --to-destination 192.168.11.3:25
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 587 -j DNAT --to-destination 192.168.11.3:587
+iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 993 -j DNAT --to-destination 192.168.11.3:993
 ## VPN
 iptables -t nat -A PREROUTING -d 80.64.157.251 -p tcp --dport 1194 -j DNAT --to-destination 172.16.0.2:1194

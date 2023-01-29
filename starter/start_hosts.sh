@@ -11,3 +11,8 @@ lstart -d ./extranet_zone
 lstart -d ./internal_dmz
 lstart -d ./restricted_zone
 lstart -d ./management_zone
+
+#To do list
+#1. iptables rules minimize to port
+#2. install suqidproxy and change dmz fw rules
+#3. verify

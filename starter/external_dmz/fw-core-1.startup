@@ -28,52 +28,76 @@ iptables -P INPUT DROP
 iptables -P OUTPUT DROP
 iptables -P FORWARD DROP
 
+################################
 # outgress traffic rules
 ## allow enterprise zone accessing the ex-dmz
-iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.12.0/24 -d 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.11.0/27 -d 192.168.12.0/24 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-## allow management accessing the ex-dmz
-iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.254.0/27 -d 192.168.11.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.11.0/27 -d 192.168.254.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.12.0/24 -d 192.168.11.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.11.0/27 -d 192.168.12.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
-# core zones' traffic rules
+## allow management accessing the ex-dmz hosts, sw-core, FWs and VPN
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.254.0/27 -d 192.168.11.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.11.0/27 -d 192.168.254.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.254.0/27 -d 192.168.0.0/29 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 192.168.0.0/29 -d 192.168.254.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.254.0/27 -d 10.0.0.1/32 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 10.0.0.1/32 -d 192.168.254.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+iptables -A FORWARD -i eth2 -o eth30 -p all -s 192.168.254.0/27 -d 172.16.0.0/21 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth30 -o eth2 -p all -s 172.16.0.0/21 -d 192.168.254.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+
+################################
+# ingress traffic rules
+## allow vpn accessing the extranet zone
+iptables -A FORWARD -i eth30 -o eth2 -p all -s  172.16.0.0/21 -d 192.168.13.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d  172.16.0.0/21 -s 192.168.13.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+## allow vpn accessing the int-dmz 
+iptables -A FORWARD -i eth30 -o eth2 -p all -s  172.16.0.0/21 -d 192.168.14.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d  172.16.0.0/21 -s 192.168.14.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+## allow ex-dmz accessing the extranet zone
+iptables -A FORWARD -i eth30 -o eth2 -p all -s  192.168.11.0/27 -d 192.168.13.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth30 -p all -d  192.168.11.0/27 -s 192.168.13.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+
+
+################################
+# traffic rules among core zones
 ## allow management zone accessing the enterprise
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.12.0/24 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.12.0/24 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.12.0/24 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.12.0/24 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 ## allow enterprise zone accessing the extranet zone
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.12.0/24 -d 192.168.13.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.12.0/24 -s 192.168.13.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.12.0/24 -d 192.168.13.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.12.0/24 -s 192.168.13.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow int-dmz zone accessing the extranet zone
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.14.0/27 -d 192.168.13.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.14.0/27 -s 192.168.13.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-## allow vpn accessing the extranet zone
-iptables -A FORWARD -i eth30 -o eth2 -p all -s  172.16.0.0/21 -d 192.168.13.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -d  172.16.0.0/21 -s 192.168.13.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.14.0/27 -d 192.168.13.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.14.0/27 -s 192.168.13.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow management zone accessing the extranet zone
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.13.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.13.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.13.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.13.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 ## allow enterprise zone accessing the int-dmz 
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.12.0/24 -d 192.168.14.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.12.0/24 -s 192.168.14.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.12.0/24 -d 192.168.14.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.12.0/24 -s 192.168.14.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow restricted zone accessing the int-dmz 
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.15.0/28 -d 192.168.14.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.15.0/28 -s 192.168.14.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
-## allow vpn accessing the int-dmz 
-iptables -A FORWARD -i eth30 -o eth2 -p all -s  172.16.0.0/21 -d 192.168.14.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth30 -o eth2 -p all -d  172.16.0.0/21 -s 192.168.14.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.15.0/28 -d 192.168.14.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.15.0/28 -s 192.168.14.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow management zone accessing the int-dmz 
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.14.0/27 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.14.0/27 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.14.0/27 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.14.0/27 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 ## allow int-dnz accessing the restricted zone
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.14.0/27 -d 192.168.15.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.14.0/27 -s 192.168.15.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.14.0/27 -d 192.168.15.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.14.0/27 -s 192.168.15.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 ## allow management zone accessing the restricted zone
-iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.15.0/28 --match conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
-iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.15.0/28 --match conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -s 192.168.254.0/27 -d 192.168.15.0/28 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
+iptables -A FORWARD -i eth2 -o eth2 -p all -d 192.168.254.0/27 -s 192.168.15.0/28 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
+## allow no-one accessing the management zone
+#
+
+################################
 # fw self accessing rules
 ## allow core sw
 iptables -A INPUT -p all -s 192.168.0.1/32 -j ACCEPT

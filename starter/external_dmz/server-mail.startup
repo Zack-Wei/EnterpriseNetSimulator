@@ -5,6 +5,6 @@ ip route add default via 192.168.11.1
 
 # start tcp chat service
 # look in /usr/lib/systemd/system/ncat-tcp-chat@.service for the unit file
-for port in 25
+for port in 25 587 993
   do systemctl start ncat-tcp-chat@${port}
 done
