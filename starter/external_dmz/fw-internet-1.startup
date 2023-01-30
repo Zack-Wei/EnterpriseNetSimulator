@@ -37,7 +37,7 @@ iptables -A FORWARD -i eth2 -o eth1 -p all -s 172.16.0.0/21 -m conntrack --ctsta
 iptables -A FORWARD -i eth1 -o eth2 -p all -d 172.16.0.0/21 -m conntrack --ctstate ESTABLISHED,RELATED -j ACCEPT
 
 ################################
-# ingress traffic rules
+# ingress traffic rules (only allow services ports)
 ## allow the Internet accessing dmz zone Services
 iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 192.168.11.3 -m multiport --dports 25,587,993 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
 iptables -A FORWARD -i eth1 -o eth2 -p tcp -d 192.168.11.4 --dport 443 -m conntrack --ctstate NEW,ESTABLISHED,RELATED -j ACCEPT
